@@ -41,8 +41,6 @@ class MoETypeEnum(str, Enum):
 
 class DeepSpeedTPConfig(DeepSpeedConfigModel):
     """ Configure tensor parallelism settings """
-    class Config:
-        arbitrary_types_allowed = True
 
     enabled: bool = True
     """ Turn tensor parallelism on/off. """
