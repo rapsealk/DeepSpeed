@@ -28,13 +28,17 @@ DTYPES = None
 def get_dtypes(include_float=True):
     global DTYPES
     if DTYPES is None:
-        DTYPES = [torch.float16, torch.float32] if include_float else [torch.float16]
+        DTYPES = [torch.float16, torch.float32]
         try:
             if get_accelerator().is_bf16_supported():
                 DTYPES.append(torch.bfloat16)
         except (AssertionError, AttributeError):
             pass
-    return DTYPES
+    # Filter per call rather than caching the filtered list: the first caller in a session must not decide
+    # whether every later caller sees float32.
+    if include_float:
+        return DTYPES
+    return [dtype for dtype in DTYPES if dtype != torch.float32]
 
 
 def allclose(x, y, tolerances: Tuple[int, int] = None):
