@@ -24,16 +24,13 @@ def reference_implementation(hidden_states: torch.Tensor, gamma: torch.Tensor, b
 
 
 @pytest.mark.inference_v2_ops
-# The shapes with <= 128 channels pack several rows into one thread block (16 to 256 rows per block, depending
+# The shapes with <= 128 channels pack several rows into one thread block (8 to 256 rows per block, depending
 # on dtype and channels) and have one row more than fits in a block, so the last block is partially filled and
 # must not touch rows past the end. Together they cover every threads-per-row dispatch in fp32 and fp16.
-@pytest.mark.parametrize("tokens, channels", [(1, 4096), (37, 2048), (112, 14432), (1024, 6144), (33, 64), (33, 128),
-                                              (65, 32), (129, 16), (257, 8)])
+@pytest.mark.parametrize("tokens, channels", [(1, 4096), (37, 2048), (112, 14432), (1024, 6144), (33, 64), (33, 96),
+                                              (33, 128), (65, 32), (129, 16), (257, 8)])
 @pytest.mark.parametrize("dtype", get_dtypes())
 def test_cuda_ln(tokens: int, channels: int, dtype: torch.dtype) -> None:
-    if dtype == torch.float32 and 64 < channels <= 128:
-        pytest.skip("fp32 with 65-128 channels launches no kernel, see #8827")
-
     # Input vals
     hidden_states = torch.randn((tokens, channels), dtype=dtype, device=get_accelerator().current_device_name())
     gamma = torch.randn((channels), dtype=dtype, device=get_accelerator().current_device_name())

@@ -240,6 +240,10 @@ void launch_rms_norm(T* norm_output,
             LAUNCH_ALL_RMS_NORM(1, 8, maxThreads);
         } else if (threads_per_group == 16) {
             LAUNCH_ALL_RMS_NORM(1, 16, maxThreads);
+        } else if (threads_per_group == 32) {
+            // fp32 hidden sizes 65-128 land here: T_per_load is 4, so they need a
+            // 32-thread group. fp16/bf16 (T_per_load 8) reach at most 16 threads.
+            LAUNCH_ALL_RMS_NORM(1, 32, maxThreads);
         }
     } else if (external_unRoll == 1) {
         // 129 - 4096 elems
